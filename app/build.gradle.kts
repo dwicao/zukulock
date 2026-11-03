@@ -11,13 +11,43 @@ android {
         applicationId = "com.tiendnm.zukulock"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // Release signing via env vars / gradle properties (used by GitHub CI).
+    // CI sets: ANDROID_KEYSTORE_PATH, ANDROID_KEYSTORE_PASSWORD,
+    //          ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+    // Local builds without these fall back to the debug key.
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+                ?: project.findProperty("ANDROID_KEYSTORE_PATH") as String?
+            val storePass = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                ?: project.findProperty("ANDROID_KEYSTORE_PASSWORD") as String?
+            val alias = System.getenv("ANDROID_KEY_ALIAS")
+                ?: project.findProperty("ANDROID_KEY_ALIAS") as String?
+            val keyPass = System.getenv("ANDROID_KEY_PASSWORD")
+                ?: project.findProperty("ANDROID_KEY_PASSWORD") as String?
+            if (!keystorePath.isNullOrEmpty()) {
+                storeFile = file(keystorePath)
+                storePassword = storePass
+                keyAlias = alias
+                keyPassword = keyPass
+            }
+        }
     }
 
     buildTypes {
         release {
+            val hasReleaseKey = !((System.getenv("ANDROID_KEYSTORE_PATH")
+                ?: project.findProperty("ANDROID_KEYSTORE_PATH") as String?).isNullOrEmpty())
+            signingConfig = if (hasReleaseKey) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

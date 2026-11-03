@@ -9,6 +9,6 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         val serviceIntent = Intent(this, SleepService::class.java)
         startService(serviceIntent)
-        finish()
+        finishAndRemoveTask()
     }
 }

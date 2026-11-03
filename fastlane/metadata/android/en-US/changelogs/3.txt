@@ -1,0 +1,1 @@
+Fix rapid taps opening the camera: use KEYCODE_SLEEP instead of POWER toggle, plus 2-second debounce.

@@ -1,0 +1,103 @@
+name: Signed Release APK
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag name for the release (e.g. v1.0.2). Leave empty to only build without publishing."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build-signed-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Check signing secrets
+        run: |
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "::error::Missing secret ANDROID_KEYSTORE_BASE64. Generate a keystore and add it via: gh secret set ANDROID_KEYSTORE_BASE64 < release.jks.b64"
+            exit 1
+          fi
+          for v in ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            echo "Requires secret: $v"
+          done
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" ] || [ -z "${{ secrets.ANDROID_KEY_ALIAS }}" ] || [ -z "${{ secrets.ANDROID_KEY_PASSWORD }}" ]; then
+            echo "::error::One or more signing secrets are missing (ANDROID_KEYSTORE_PASSWORD / ANDROID_KEY_ALIAS / ANDROID_KEY_PASSWORD)."
+            exit 1
+          fi
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build signed release APK
+        run: ./gradlew assembleRelease
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Verify APK signature
+        run: |
+          APK=app/build/outputs/apk/release/app-release.apk
+          ls -lh "$APK"
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
+          echo "Using apksigner: $APKSIGNER"
+          "$APKSIGNER" verify --print-certs "$APK"
+
+      - name: Rename APK
+        id: rename
+        run: |
+          VERSION=$(grep -m1 'versionName' app/build.gradle.kts | sed -E 's/.*"([0-9.]+)".*/\1/')
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "$GITHUB_REF_TYPE" != "tag" && -n "${{ inputs.tag }}" ]]; then TAG="${{ inputs.tag }}"; fi
+          if [[ "$GITHUB_REF_TYPE" != "tag" && -z "${{ inputs.tag }}" ]]; then TAG="v${VERSION}"; fi
+          SRC=app/build/outputs/apk/release/app-release.apk
+          DEST="zukulock-${TAG}-release.apk"
+          cp "$SRC" "$DEST"
+          echo "apk=$DEST" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.rename.outputs.apk }}
+          path: ${{ steps.rename.outputs.apk }}
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.rename.outputs.tag }}
+          name: ZukuLock ${{ steps.rename.outputs.tag }}
+          body: |
+            ZukuLock ${{ steps.rename.outputs.tag }} (signed release)
+
+            Fix: tap cepat tidak lagi membuka kamera (pakai KEYCODE_SLEEP + debounce 2 detik).
+          files: ${{ steps.rename.outputs.apk }}
+          draft: false
+          prerelease: false
