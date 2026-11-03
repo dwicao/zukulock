@@ -28,8 +28,13 @@ jobs:
           java-version: "17"
           cache: gradle
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # NOTE: do not use android-actions/setup-android@v3 here — its default
+      # "tools" package no longer exists and fails the job. The
+      # ubuntu-latest runner already ships with Android SDK + build-tools.
+      - name: Show Android SDK packages
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          sdkmanager --list_installed | tail -20
 
       - name: Check signing secrets
         run: |
