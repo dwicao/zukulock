@@ -29,17 +29,16 @@ jobs:
           cache: gradle
 
       # NOTE: do not use android-actions/setup-android@v3 here — its default
-      # "tools" package no longer exists and fails the job. The preinstalled
-      # ubuntu-latest SDK works once the exact platform is installed.
-      - name: Install Android platform 36
-        run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
-
+      # "tools" package no longer exists and fails the job.
+      # ubuntu-latest ships ANDROID_HOME=/usr/local/lib/android/sdk with
+      # android-36 and build-tools 36.0.0 preinstalled; sdkmanager is NOT on
+      # PATH here either (use $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager).
       - name: Show Android SDK packages
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME"
-          sdkmanager --list_installed | tail -20
+          ls "$ANDROID_HOME"
+          ls "$ANDROID_HOME/platforms"
+          ls "$ANDROID_HOME/build-tools"
 
       - name: Check signing secrets
         run: |

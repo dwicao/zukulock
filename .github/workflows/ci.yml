@@ -19,11 +19,9 @@ jobs:
           java-version: "17"
           cache: gradle
 
-      - name: Install Android platform 36
-        run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
-
+      # ubuntu-latest ships ANDROID_HOME=/usr/local/lib/android/sdk with
+      # android-36 and build-tools 36.0.0 preinstalled; nothing to install.
+      # NOTE: sdkmanager is NOT on PATH here — use $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager if ever needed.
       - name: Make gradlew executable
         run: chmod +x gradlew
 
