@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/NoSplashTheme"
-        tools:targetApi="31">
+        android:theme="@style/NoSplashTheme">
         <activity
             android:name=".MainActivity"
             android:excludeFromRecents="true"
@@ -19,10 +17,6 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".SleepService"
-            android:enabled="true"
-            android:exported="false" />
         <provider
             android:name="rikka.shizuku.ShizukuProvider"
             android:authorities="${applicationId}.shizuku"

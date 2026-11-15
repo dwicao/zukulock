@@ -5,15 +5,14 @@ plugins {
 
 android {
     namespace = "com.tiendnm.zukulock"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.tiendnm.zukulock"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 3
-        versionName = "1.0.2"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        targetSdk = 36
+        versionCode = 4
+        versionName = "1.0.3"
     }
 
     // Release signing via env vars / gradle properties (used by GitHub CI).
@@ -48,7 +47,8 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -56,11 +56,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     dependenciesInfo {
         includeInApk = false
@@ -71,4 +71,6 @@ android {
 dependencies {
     implementation(libs.rikka.shizuku.api)
     implementation(libs.rikka.shizuku.provider)
+
+    testImplementation(libs.junit)
 }

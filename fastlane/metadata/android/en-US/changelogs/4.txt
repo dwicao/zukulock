@@ -1,0 +1,8 @@
+Lock the screen with a single tap.
+
+Improvements in 1.0.3:
+- First tap now requests the Shizuku permission and locks the screen as soon as it is granted (previously the first tap did nothing).
+- Failure paths now show a toast instead of failing silently.
+- Rapid taps are only debounced after the lock command is actually sent; failed taps no longer suppress retries.
+- The app is now minified with R8 for smaller downloads.
+- Updated build toolchain (AGP 8.13.2, Kotlin 2.2.21, Gradle 8.14.7, compileSdk 36).

@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Screen Lock"
+rootProject.name = "ZukuLock"
 include(":app")

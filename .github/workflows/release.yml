@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag name for the release (e.g. v1.0.2). Leave empty to only build without publishing."
+        description: "Tag name for the release (e.g. v1.0.3). Leave empty to only build without publishing."
         required: false
         default: ""
 
@@ -29,8 +29,13 @@ jobs:
           cache: gradle
 
       # NOTE: do not use android-actions/setup-android@v3 here — its default
-      # "tools" package no longer exists and fails the job. The
-      # ubuntu-latest runner already ships with Android SDK + build-tools.
+      # "tools" package no longer exists and fails the job. The preinstalled
+      # ubuntu-latest SDK works once the exact platform is installed.
+      - name: Install Android platform 36
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
       - name: Show Android SDK packages
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME"
@@ -57,6 +62,9 @@ jobs:
 
       - name: Make gradlew executable
         run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest
 
       - name: Build signed release APK
         run: ./gradlew assembleRelease
@@ -99,10 +107,11 @@ jobs:
         with:
           tag_name: ${{ steps.rename.outputs.tag }}
           name: ZukuLock ${{ steps.rename.outputs.tag }}
+          generate_release_notes: true
           body: |
             ZukuLock ${{ steps.rename.outputs.tag }} (signed release)
 
-            Fix: tap cepat tidak lagi membuka kamera (pakai KEYCODE_SLEEP + debounce 2 detik).
+            See fastlane/metadata/android/en-US/changelogs/ for notes.
           files: ${{ steps.rename.outputs.apk }}
           draft: false
           prerelease: false

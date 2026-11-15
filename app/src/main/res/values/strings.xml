@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">Screen Lock</string>
+    <string name="app_name">ZukuLock</string>
+    <string name="toast_shizuku_not_running">Shizuku service is not running</string>
+    <string name="toast_shizuku_too_old">ZukuLock requires Shizuku v11 or newer</string>
+    <string name="toast_permission_denied">Shizuku permission denied</string>
+    <string name="toast_permission_permanently_denied">Permission denied permanently. Enable ZukuLock inside the Shizuku app settings to use it.</string>
+    <string name="toast_permission_timeout">Timed out waiting for the Shizuku permission result</string>
 </resources>
